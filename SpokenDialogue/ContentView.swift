@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var text: String = ""
     @State private var messages: [Message] = []
     
+    private let llmClient = LLMClient()
     private let ttsClient = TTSClient()
 
     var body: some View {
@@ -44,7 +45,6 @@ struct ContentView: View {
                 Button(action: {
                     send(text: text)
                     text = ""
-                    print(messages)
                 }) {
                     Image(systemName: "paperplane.fill")
                         .foregroundStyle(.white)
@@ -64,12 +64,10 @@ struct ContentView: View {
         messages.append(message)
         self.text = ""
         
-        let output = "こんにちは"
-        messages.append(Message(role: "assistant", content: output))
-        do {
-            try ttsClient.synthesize(text: output, rate: 0.5)
-        } catch {
-            print(error)
+        Task {
+            let output = try await llmClient.responses(messages: messages)
+            messages.append(output)
+            try ttsClient.synthesize(text: output.content, rate: 0.5)
         }
     }
 }
