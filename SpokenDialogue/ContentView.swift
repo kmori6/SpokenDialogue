@@ -16,6 +16,7 @@ struct Message: Identifiable {
 struct ContentView: View {
     @State private var text: String = ""
     @State private var messages: [Message] = []
+    @State private var isRecording = false
     
     private let llmClient = LLMClient()
     private let ttsClient = TTSClient()
@@ -43,17 +44,35 @@ struct ContentView: View {
                     .lineLimit(1...4)
                 
                 Button(action: {
-                    send(text: text)
-                    text = ""
+                    if isRecording {
+                        isRecording = false
+                    } else {
+                        isRecording = true
+                    }
                 }) {
-                    Image(systemName: "paperplane.fill")
+                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 36, height: 36)
                         .background(
                             Circle().fill(Color.blue)
                         )
                 }
                 
+                Button(action: {
+                    if !text.isEmpty {
+                        send(text: text)
+                    }
+                }) {
+                    Image(systemName: "paperplane.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle().fill(isRecording ? Color.gray :  Color.blue)
+                        )
+                }
+                .disabled(isRecording)
             }
             .padding()
         }

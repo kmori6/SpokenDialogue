@@ -6,13 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		21C00D052F76BD16000C349C /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 21C00D042F76BD16000C349C /* Config.xcconfig */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		21C00CF22F76B7A7000C349C /* SpokenDialogue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpokenDialogue.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		21C00D042F76BD16000C349C /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		21C00D072F76BDCE000C349C /* Exceptions for "SpokenDialogue" folder in "SpokenDialogue" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 21C00CF12F76B7A7000C349C /* SpokenDialogue */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		21C00CF42F76B7A7000C349C /* SpokenDialogue */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				21C00D072F76BDCE000C349C /* Exceptions for "SpokenDialogue" folder in "SpokenDialogue" target */,
+			);
 			path = SpokenDialogue;
 			sourceTree = "<group>";
 		};
@@ -32,6 +50,7 @@
 		21C00CE92F76B7A7000C349C = {
 			isa = PBXGroup;
 			children = (
+				21C00D042F76BD16000C349C /* Config.xcconfig */,
 				21C00CF42F76B7A7000C349C /* SpokenDialogue */,
 				21C00CF32F76B7A7000C349C /* Products */,
 			);
@@ -109,6 +128,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21C00D052F76BD16000C349C /* Config.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +147,7 @@
 /* Begin XCBuildConfiguration section */
 		21C00CFB2F76B7AA000C349C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 21C00D042F76BD16000C349C /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -191,6 +212,7 @@
 		};
 		21C00CFC2F76B7AA000C349C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 21C00D042F76BD16000C349C /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -248,6 +270,7 @@
 		};
 		21C00CFE2F76B7AA000C349C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 21C00D042F76BD16000C349C /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -256,6 +279,7 @@
 				DEVELOPMENT_TEAM = 86W9N3G272;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpokenDialogue/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -280,6 +304,7 @@
 		};
 		21C00CFF2F76B7AA000C349C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 21C00D042F76BD16000C349C /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -288,6 +313,7 @@
 				DEVELOPMENT_TEAM = 86W9N3G272;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpokenDialogue/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
