@@ -13,16 +13,53 @@ struct Message: Identifiable {
     let content: String
 }
 
+enum Model: String, CaseIterable, Identifiable {
+    case gpt = "gpt-5.4"
+    case gptMini = "gpt-5.4-mini"
+    case gptNano = "gpt-5.4-nano"
+    var id: String { rawValue }
+}
+
 struct ContentView: View {
     @State private var text: String = ""
     @State private var messages: [Message] = []
     @State private var isRecording = false
+    @State private var selectedModel: Model = .gpt
     
     private let llmClient = LLMClient()
     private let ttsClient = TTSClient()
 
     var body: some View {
         VStack(spacing: 0) {
+            HStack {
+                
+                Text("SpokenDialogue")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Menu {
+                    Picker("Model", selection: $selectedModel) {
+                        ForEach(Model.allCases) { model in
+                            Text(model.rawValue).tag(model)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(selectedModel.rawValue)
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(Capsule())
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .background(Color(.systemBackground))
             
             ScrollViewReader { proxy in
                 ScrollView {
@@ -84,7 +121,7 @@ struct ContentView: View {
         self.text = ""
         
         Task {
-            let output = try await llmClient.responses(messages: messages)
+            let output = try await llmClient.responses(messages: messages, model: selectedModel)
             messages.append(output)
             try ttsClient.synthesize(text: output.content, rate: 0.5)
         }

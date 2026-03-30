@@ -34,11 +34,10 @@ struct ContentItem: Codable {
 }
 
 final class LLMClient {
-    private let model = "gpt-5.4"
     private let instructions = "You are a helpful assistant. Chat with user in Japanese."
     private let baseURL = "https://api.openai.com/v1"
     
-    func responses(messages: [Message]) async throws -> Message {
+    func responses(messages: [Message], model: Model) async throws -> Message {
         
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") else {
             return Message(role: "assistant", content: "API KEY load failed.")
@@ -55,7 +54,7 @@ final class LLMClient {
             let item = MessageItem(role: message.role, content: message.content)
             input.append(item)
         }
-        let body = Request(model: model, instructions: instructions, input: input)
+        let body = Request(model: model.rawValue, instructions: instructions, input: input)
         
         request.httpBody = try JSONEncoder().encode(body)
         let (data, _) = try await URLSession.shared.data(for: request)
