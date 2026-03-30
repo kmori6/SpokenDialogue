@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		21813B3C2F7A5FB9006C1151 /* onnxruntime in Frameworks */ = {isa = PBXBuildFile; productRef = 21813B3B2F7A5FB9006C1151 /* onnxruntime */; };
+		21813B3E2F7A5FB9006C1151 /* onnxruntime_extensions in Frameworks */ = {isa = PBXBuildFile; productRef = 21813B3D2F7A5FB9006C1151 /* onnxruntime_extensions */; };
 		21C00D052F76BD16000C349C /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 21C00D042F76BD16000C349C /* Config.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +43,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21813B3E2F7A5FB9006C1151 /* onnxruntime_extensions in Frameworks */,
+				21813B3C2F7A5FB9006C1151 /* onnxruntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +88,8 @@
 			);
 			name = SpokenDialogue;
 			packageProductDependencies = (
+				21813B3B2F7A5FB9006C1151 /* onnxruntime */,
+				21813B3D2F7A5FB9006C1151 /* onnxruntime_extensions */,
 			);
 			productName = SpokenDialogue;
 			productReference = 21C00CF22F76B7A7000C349C /* SpokenDialogue.app */;
@@ -113,6 +119,9 @@
 			);
 			mainGroup = 21C00CE92F76B7A7000C349C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				21813B3A2F7A5FB9006C1151 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 21C00CF32F76B7A7000C349C /* Products */;
 			projectDirPath = "";
@@ -280,6 +289,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SpokenDialogue/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -314,6 +325,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SpokenDialogue/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -358,6 +371,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		21813B3A2F7A5FB9006C1151 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.24.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		21813B3B2F7A5FB9006C1151 /* onnxruntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 21813B3A2F7A5FB9006C1151 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */;
+			productName = onnxruntime;
+		};
+		21813B3D2F7A5FB9006C1151 /* onnxruntime_extensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 21813B3A2F7A5FB9006C1151 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */;
+			productName = onnxruntime_extensions;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 21C00CEA2F76B7A7000C349C /* Project object */;
 }

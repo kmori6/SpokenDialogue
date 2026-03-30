@@ -23,11 +23,18 @@ enum Model: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @State private var text: String = ""
     @State private var messages: [Message] = []
-    @State private var isRecording = false
     @State private var selectedModel: Model = .gpt
     
+    @StateObject private var audioClient: AudioClient
+    @StateObject private var asrClient: ASRClient
     private let llmClient = LLMClient()
     private let ttsClient = TTSClient()
+    
+    init() {
+        let asr = ASRClient()
+        _asrClient = StateObject(wrappedValue: asr)
+        _audioClient = StateObject(wrappedValue: AudioClient(asrClient: asr))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -79,15 +86,22 @@ struct ContentView: View {
             HStack(alignment: .bottom, spacing: 8) {
                 TextField("Type message...", text: $text, axis: .vertical)
                     .lineLimit(1...4)
+                    .disabled(audioClient.isRecording)
                 
-                Button(action: {
-                    if isRecording {
-                        isRecording = false
+                Button {
+                    if audioClient.isRecording {
+                        audioClient.stop()
                     } else {
-                        isRecording = true
+                        Task {
+                            do {
+                                try await audioClient.start()
+                            } catch {
+                                print(error)
+                            }
+                        }
                     }
-                }) {
-                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                } label: {
+                    Image(systemName: audioClient.isRecording ? "stop.fill" : "mic.fill")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
@@ -96,23 +110,33 @@ struct ContentView: View {
                         )
                 }
                 
-                Button(action: {
-                    if !text.isEmpty {
-                        send(text: text)
-                    }
-                }) {
+                Button {
+                    guard canSendTypedText else { return }
+                    send(text: text)
+                } label: {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
                         .background(
-                            Circle().fill(isRecording ? Color.gray :  Color.blue)
+                            Circle().fill(audioClient.isRecording ? Color.gray :  Color.blue)
                         )
                 }
-                .disabled(isRecording)
+                .disabled(audioClient.isRecording)
             }
             .padding()
         }
+        .onAppear {
+            asrClient.requestAuthorization()
+        }
+        .onChange(of: asrClient.finalTranscript) {
+              let trimmed =
+            asrClient.finalTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+              guard !trimmed.isEmpty else { return }
+
+              send(text: trimmed)
+              asrClient.clear()
+          }
     }
     
     private func send(text: String) {
@@ -125,6 +149,12 @@ struct ContentView: View {
             messages.append(output)
             try ttsClient.synthesize(text: output.content, rate: 0.5)
         }
+    }
+    
+    private var canSendTypedText: Bool {
+        let trimmed =
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !audioClient.isRecording && !trimmed.isEmpty
     }
 }
 
