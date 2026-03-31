@@ -33,6 +33,23 @@ struct ContentItem: Codable {
     let text: String
 }
 
+enum StreamEvent {
+    case delta(String)
+    case completed
+}
+
+struct OutputTextDeltaEvent: Codable {
+    let delta: String
+}
+
+struct StreamRequest: Encodable {
+    let model: String
+    let instructions: String
+    let input: [MessageItem]
+    let stream = true
+}
+
+
 final class LLMClient {
     private let instructions = "You are a helpful assistant. Chat with user in Japanese."
     private let baseURL = "https://api.openai.com/v1"
@@ -63,5 +80,45 @@ final class LLMClient {
         
         let output = Message(role: json.output[0].role, content: json.output[0].content[0].text)
         return output
+    }
+
+    func streamResponses(messages: [Message], model: Model) -> AsyncStream<StreamEvent> {
+        AsyncStream { continuation in
+            Task {
+                let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY")!
+                let decoder = JSONDecoder()
+                
+                let url = URL(string: "\(baseURL)/responses")
+                var request = URLRequest(url: url!)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+                
+                let body = StreamRequest(
+                    model: model.rawValue,
+                    instructions: instructions,
+                    input: messages.map {
+                        MessageItem(role: $0.role, content: $0.content)
+                    }
+                )
+                
+                request.httpBody = try JSONEncoder().encode(body)
+                let (bytes, _) = try await URLSession.shared.bytes(for: request)
+                for try await line in bytes.lines {
+                    // https://developers.openai.com/api/reference/resources/responses/methods/create
+                    guard line.hasPrefix("data: ") else {
+                        continue
+                    }
+                    if line.contains("\"type\":\"response.output_text.delta\"") {
+                        let data = String(line.dropFirst(5))
+                        let chunk = try decoder.decode(OutputTextDeltaEvent.self, from: Data(data.utf8))
+                        continuation.yield(.delta(chunk.delta))
+                    } else if line.contains("\"type\":\"response.completed\"") {
+                        continuation.yield(.completed)
+                    }
+                }
+                continuation.finish()
+            }
+        }
     }
 }

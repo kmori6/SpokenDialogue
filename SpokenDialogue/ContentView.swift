@@ -8,9 +8,15 @@
 import SwiftUI
 
 struct Message: Identifiable {
-    let id = UUID()
+    let id: UUID
     let role: String
-    let content: String
+    var content: String
+
+    init(id: UUID = UUID(), role: String, content: String) {
+        self.id = id
+        self.role = role
+        self.content = content
+    }
 }
 
 enum Model: String, CaseIterable, Identifiable {
@@ -140,14 +146,32 @@ struct ContentView: View {
     }
     
     private func send(text: String) {
+        
         let message = Message(role: "user", content: text)
         messages.append(message)
         self.text = ""
         
+        let id = UUID()
+        var content = ""
+        messages.append(Message(id: id, role: "assistant", content: content))
+        
         Task {
-            let output = try await llmClient.responses(messages: messages, model: selectedModel)
-            messages.append(output)
-            try ttsClient.synthesize(text: output.content, rate: 0.5)
+            for try await event in llmClient.streamResponses(messages: messages, model: selectedModel) {
+                switch event {
+                case .delta(let delta):
+                    guard let index = messages.firstIndex(where: { $0.id == id }) else {
+                        return
+                    }
+                    messages[index].content += delta
+                    content += delta
+                case .completed:
+                    break
+                }
+            }
+            
+            if !content.isEmpty {
+                try ttsClient.synthesize(text: content, rate: 0.5)
+            }
         }
     }
     
