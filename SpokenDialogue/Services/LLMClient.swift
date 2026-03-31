@@ -54,7 +54,7 @@ final class LLMClient {
     private let instructions = "You are a helpful assistant. Chat with user in Japanese."
     private let baseURL = "https://api.openai.com/v1"
     
-    func responses(messages: [Message], model: Model) async throws -> Message {
+    func responses(messages: [Message], model: LLM) async throws -> Message {
         
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") else {
             return Message(role: "assistant", content: "API KEY load failed.")
@@ -82,7 +82,7 @@ final class LLMClient {
         return output
     }
 
-    func streamResponses(messages: [Message], model: Model) -> AsyncStream<StreamEvent> {
+    func streamResponses(messages: [Message], model: LLM) -> AsyncStream<StreamEvent> {
         AsyncStream { continuation in
             Task {
                 let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY")!

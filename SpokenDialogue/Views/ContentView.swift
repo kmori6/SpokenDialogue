@@ -8,21 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var text: String = ""
-    @State private var messages: [Message] = []
-    @State private var selectedModel: LLM = .gpt
+    @StateObject private var viewModel = ChatViewModel()
     
-    @StateObject private var audioClient: AudioClient
-    @StateObject private var asrClient: ASRClient
-    private let llmClient = LLMClient()
-    private let ttsClient = TTSClient()
-    
-    init() {
-        let asr = ASRClient()
-        _asrClient = StateObject(wrappedValue: asr)
-        _audioClient = StateObject(wrappedValue: AudioClient(asrClient: asr))
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -33,14 +20,14 @@ struct ContentView: View {
                 Spacer()
                 
                 Menu {
-                    Picker("Model", selection: $selectedModel) {
+                    Picker("Model", selection: $viewModel.selectedModel) {
                         ForEach(LLM.allCases) { model in
                             Text(model.rawValue).tag(model)
                         }
                     }
                 } label: {
                     HStack(spacing: 6) {
-                        Text(selectedModel.rawValue)
+                        Text(viewModel.selectedModel.rawValue)
                         Image(systemName: "chevron.down")
                             .font(.caption)
                     }
@@ -58,9 +45,8 @@ struct ContentView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(messages) { message in
+                        ForEach(viewModel.messages) { message in
                             MessageView(message: message)
-                                .id(message.id)
                         }
                     }
                     .padding()
@@ -71,24 +57,14 @@ struct ContentView: View {
             Spacer()
             
             HStack(alignment: .bottom, spacing: 8) {
-                TextField("Type message...", text: $text, axis: .vertical)
+                TextField("Type message...", text: $viewModel.text, axis: .vertical)
                     .lineLimit(1...4)
-                    .disabled(audioClient.isRecording)
+                    .disabled(viewModel.isRecording)
                 
                 Button {
-                    if audioClient.isRecording {
-                        audioClient.stop()
-                    } else {
-                        Task {
-                            do {
-                                try await audioClient.start()
-                            } catch {
-                                print(error)
-                            }
-                        }
-                    }
+                    viewModel.toggleRecording()
                 } label: {
-                    Image(systemName: audioClient.isRecording ? "stop.fill" : "mic.fill")
+                    Image(systemName: viewModel.isRecording ? "stop.fill" : "mic.fill")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
@@ -98,68 +74,23 @@ struct ContentView: View {
                 }
                 
                 Button {
-                    guard canSendTypedText else { return }
-                    send(text: text)
+                    viewModel.send()
                 } label: {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
                         .background(
-                            Circle().fill(audioClient.isRecording ? Color.gray :  Color.blue)
+                            Circle().fill(viewModel.isRecording ? Color.gray :  Color.blue)
                         )
                 }
-                .disabled(audioClient.isRecording)
+                .disabled(viewModel.isRecording)
             }
             .padding()
         }
         .onAppear {
-            asrClient.requestAuthorization()
+            viewModel.onAppear()
         }
-        .onChange(of: asrClient.finalTranscript) {
-              let trimmed =
-            asrClient.finalTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-              guard !trimmed.isEmpty else { return }
-
-              send(text: trimmed)
-              asrClient.clear()
-          }
-    }
-    
-    private func send(text: String) {
-        
-        let message = Message(role: "user", content: text)
-        messages.append(message)
-        self.text = ""
-        
-        let id = UUID()
-        var content = ""
-        messages.append(Message(id: id, role: "assistant", content: content))
-        
-        Task {
-            for try await event in llmClient.streamResponses(messages: messages, model: selectedModel) {
-                switch event {
-                case .delta(let delta):
-                    guard let index = messages.firstIndex(where: { $0.id == id }) else {
-                        return
-                    }
-                    messages[index].content += delta
-                    content += delta
-                case .completed:
-                    break
-                }
-            }
-            
-            if !content.isEmpty {
-                try ttsClient.synthesize(text: content, rate: 0.5)
-            }
-        }
-    }
-    
-    private var canSendTypedText: Bool {
-        let trimmed =
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !audioClient.isRecording && !trimmed.isEmpty
     }
 }
 
