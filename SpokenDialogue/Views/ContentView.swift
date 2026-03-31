@@ -7,29 +7,10 @@
 
 import SwiftUI
 
-struct Message: Identifiable {
-    let id: UUID
-    let role: String
-    var content: String
-
-    init(id: UUID = UUID(), role: String, content: String) {
-        self.id = id
-        self.role = role
-        self.content = content
-    }
-}
-
-enum Model: String, CaseIterable, Identifiable {
-    case gpt = "gpt-5.4"
-    case gptMini = "gpt-5.4-mini"
-    case gptNano = "gpt-5.4-nano"
-    var id: String { rawValue }
-}
-
 struct ContentView: View {
     @State private var text: String = ""
     @State private var messages: [Message] = []
-    @State private var selectedModel: Model = .gpt
+    @State private var selectedModel: LLM = .gpt
     
     @StateObject private var audioClient: AudioClient
     @StateObject private var asrClient: ASRClient
@@ -53,7 +34,7 @@ struct ContentView: View {
                 
                 Menu {
                     Picker("Model", selection: $selectedModel) {
-                        ForEach(Model.allCases) { model in
+                        ForEach(LLM.allCases) { model in
                             Text(model.rawValue).tag(model)
                         }
                     }
@@ -182,33 +163,6 @@ struct ContentView: View {
     }
 }
 
-struct MessageView: View {
-    let message: Message
-    
-    var body: some View {
-        HStack {
-            if message.role == "user" {
-                Spacer(minLength: 40)
-                                
-                Text(message.content)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Color.blue)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-            } else {
-                Text(message.content)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Color(.secondarySystemBackground))
-                    .foregroundStyle(.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                
-                Spacer(minLength: 40)
-            }
-        }
-    }
-}
 
 #Preview {
     ContentView()
