@@ -1,5 +1,5 @@
 //
-//  AudioClient.swift
+//  AudioService.swift
 //  SpokenDialogue
 //
 //  Created by Kosuke Mori on 2026/03/30.
@@ -9,13 +9,13 @@ import Foundation
 import AVFoundation
 import Combine
 
-final class AudioClient: ObservableObject {
+final class AudioService: ObservableObject {
 
     private let engine = AVAudioEngine()
     private let audioQueue = DispatchQueue(label: "vad.audio.queue")
     
-    private let vadClient = VADClient()
-    private let asrClient: ASRClient
+    private let vadService = VADService()
+    private let asrService: ASRService
     
     private var vadConverter: AVAudioConverter?
     private let vadOutputFormat = AVAudioFormat(
@@ -35,19 +35,19 @@ final class AudioClient: ObservableObject {
     private var isSpeaking = false
     @Published private(set) var isRecording = false
     
-    init(asrClient: ASRClient) {
-        self.asrClient = asrClient
+    init(asrService: ASRService) {
+        self.asrService = asrService
     }
 
     func start() async throws {
         guard !isRecording else { return }
 
-        try vadClient.load()
+        try vadService.load()
 
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(
             .playAndRecord,
-            mode: .measurement,
+            mode: .voiceChat,
             options: [.defaultToSpeaker]
         )
         try session.setPreferredSampleRate(16_000)
@@ -81,15 +81,15 @@ final class AudioClient: ObservableObject {
 
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
-        vadClient.reset()
+        vadService.reset()
         vadConverter = nil
         vadInputBuffer.removeAll()
         isSpeaking = false
         consecutiveSilenceCount = 0
         isRecording = false
 
-        Task { @MainActor [asrClient] in
-            asrClient.stop()
+        Task { @MainActor [asrService] in
+            asrService.stop()
         }
 
         do {
@@ -115,7 +115,7 @@ final class AudioClient: ObservableObject {
             vadInputBuffer.removeFirst(512)
 
             do {
-                latestProb = try vadClient.predict(audio: chunk)
+                latestProb = try vadService.predict(audio: chunk)
             } catch {
                 return
             }
@@ -145,19 +145,19 @@ final class AudioClient: ObservableObject {
         }
 
         if shouldStopRecognition {
-            Task { @MainActor [asrClient] in
-                asrClient.stop()
+            Task { @MainActor [asrService] in
+                asrService.stop()
             }
             return
         }
         
         // push pcm buffer to asr
         if isSpeaking {
-            Task { @MainActor [asrClient] in
+            Task { @MainActor [asrService] in
                 if shouldStartRecognition {
-                    asrClient.start()
+                    asrService.start()
                 }
-                asrClient.append(buffer)
+                asrService.append(buffer)
             }
         }
     }

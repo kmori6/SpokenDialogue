@@ -1,5 +1,5 @@
 //
-//  LLMClient.swift
+//  LLMService.swift
 //  SpokenDialogue
 //
 //  Created by Kosuke Mori on 2026/03/27.
@@ -50,7 +50,7 @@ struct StreamRequest: Encodable {
 }
 
 
-final class LLMClient {
+final class LLMService {
     private let instructions = "You are a helpful assistant. Chat with user in Japanese."
     private let baseURL = "https://api.openai.com/v1"
     

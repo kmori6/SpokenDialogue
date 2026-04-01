@@ -15,63 +15,130 @@ final class ChatViewModel: ObservableObject {
     @Published var selectedModel: LLM = .gpt
     @Published private(set) var isRecording = false
 
-    private let asrClient: ASRClient
-    private let audioClient: AudioClient
-    private let llmClient: LLMClient
-    private let ttsClient: TTSClient
+    private let asrService: ASRService
+    private let audioService: AudioService
+    private let llmService: LLMService
+    private let ttsService: TTSService
+    
+    private var cancellables = Set<AnyCancellable>()
+    private var liveUserMessageID: UUID?
     
     init(
-        asrClient: ASRClient? = nil,
-        llmClient: LLMClient = LLMClient(),
-        ttsClient: TTSClient = TTSClient()
+        asrService: ASRService? = nil,
+        llmService: LLMService = LLMService(),
+        ttsService: TTSService = TTSService()
     ) {
-        let asrClient = asrClient ?? ASRClient()
-        self.asrClient = asrClient
-        self.audioClient = AudioClient(asrClient: asrClient)
-        self.llmClient = llmClient
-        self.ttsClient = ttsClient
+        let asrService = asrService ?? ASRService()
+        self.asrService = asrService
+        self.audioService = AudioService(asrService: asrService)
+        self.llmService = llmService
+        self.ttsService = ttsService
+        
+        bindAudio()
+        bindTranscript()
+        bindFinalTranscript()
     }
     
     func onAppear() {
-        asrClient.requestAuthorization()
+        asrService.requestAuthorization()
     }
     
-    func onChange() {
-        let trimmed = asrClient.finalTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        responses(text: trimmed)
-        asrClient.clear()
+    private func bindTranscript() {
+        asrService.$transcript
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .removeDuplicates()
+            .filter { !$0.isEmpty }
+            .sink { [weak self] text in
+                self?.upsertLiveUserMessage(text)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func bindAudio() {
+        audioService.$isRecording
+            .sink { [weak self] isRecording in
+                self?.isRecording = isRecording
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func bindFinalTranscript() {
+        asrService.$finalTranscript
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .removeDuplicates()
+            .sink { [weak self] text in
+                self?.finalizeUtteranceAndRespond(text)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func upsertLiveUserMessage(_ text: String) {
+        if let id = liveUserMessageID,
+           let index = messages.firstIndex(where: { $0.id == id }) {
+            messages[index].content = text
+            return
+        }
+        
+        let id = UUID()
+        liveUserMessageID = id
+        messages.append(Message(id: id, role: "user", content: text))
+    }
+    
+    private func finalizeUtteranceAndRespond(_ finalText: String) {
+        guard let id = liveUserMessageID,
+              let index = messages.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        
+        messages[index].content = finalText
+                
+        liveUserMessageID = nil
+        asrService.clear()
+        
+        responses(requestMessages: messages)
     }
     
     func toggleRecording() {
         if isRecording {
-            audioClient.stop()
+            audioService.stop()
             return
         }
         
         Task {
-            try await audioClient.start()
+            try await audioService.start()
         }
+    }
+
+    func startNewChat() {
+        if isRecording {
+            audioService.stop()
+        }
+
+        text = ""
+        messages = []
+        liveUserMessageID = nil
+        asrService.clear()
     }
     
     func send() {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isRecording else { return }
-        responses(text: trimmed)
-    }
-    
-    private func responses(text: String) {
+        
         let userMessage = Message(role: "user", content: text)
         messages.append(userMessage)
-        self.text = ""
-        
+        text = ""
+
+        responses(requestMessages: messages)
+    }
+    
+    private func responses(requestMessages: [Message]) {
+                
         let assistantID = UUID()
         var content = ""
         messages.append(Message(id: assistantID, role: "assistant", content: ""))
         
         Task {
-            for try await event in llmClient.streamResponses(messages: messages, model: selectedModel) {
+            for try await event in llmService.streamResponses(messages: requestMessages, model: selectedModel) {
                 switch event {
                 case .delta(let delta):
                     guard let index = messages.firstIndex(where: { $0.id == assistantID }) else {
@@ -85,7 +152,7 @@ final class ChatViewModel: ObservableObject {
             }
             
             if !content.isEmpty {
-                try ttsClient.synthesize(text: content, rate: 0.5)
+                try ttsService.synthesize(text: content, rate: 0.5)
             }
         }
     }

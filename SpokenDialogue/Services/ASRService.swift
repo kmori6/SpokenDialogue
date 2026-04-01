@@ -1,5 +1,5 @@
 //
-//  ASRClient.swift
+//  ASRService.swift
 //  SpokenDialogue
 //
 //  Created by Kosuke Mori on 2026/03/30.
@@ -11,7 +11,7 @@ import AVFAudio
 import Combine
 
 @MainActor
-final class ASRClient: ObservableObject {
+final class ASRService: ObservableObject {
     @Published var transcript: String = ""
     @Published var finalTranscript: String = ""
     @Published var useOnDeviceRecognition: Bool = false

@@ -1,5 +1,5 @@
 //
-//  VADClient.swift
+//  VADService.swift
 //  SpokenDialogue
 //
 //  Created by Kosuke Mori on 2026/03/30.
@@ -8,7 +8,7 @@
 import Foundation
 import OnnxRuntimeBindings
 
-final class VADClient {
+final class VADService {
     private var env: ORTEnv?
     private var session: ORTSession?
     private var state: [Float] = Array(repeating: 0, count: 2 * 1 * 128)
