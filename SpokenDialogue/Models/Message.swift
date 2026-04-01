@@ -9,10 +9,10 @@ import Foundation
 
 struct Message: Identifiable {
     let id: UUID
-    let role: String
+    let role: MessageRole
     var content: String
 
-    init(id: UUID = UUID(), role: String, content: String) {
+    init(id: UUID = UUID(), role: MessageRole, content: String) {
         self.id = id
         self.role = role
         self.content = content

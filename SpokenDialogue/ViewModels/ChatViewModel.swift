@@ -81,7 +81,7 @@ final class ChatViewModel: ObservableObject {
         
         let id = UUID()
         liveUserMessageID = id
-        messages.append(Message(id: id, role: "user", content: text))
+        messages.append(Message(id: id, role: .user, content: text))
     }
     
     private func finalizeUtteranceAndRespond(_ finalText: String) {
@@ -124,7 +124,7 @@ final class ChatViewModel: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isRecording else { return }
         
-        let userMessage = Message(role: "user", content: text)
+        let userMessage = Message(role: .user, content: text)
         messages.append(userMessage)
         text = ""
 
@@ -135,7 +135,7 @@ final class ChatViewModel: ObservableObject {
                 
         let assistantID = UUID()
         var content = ""
-        messages.append(Message(id: assistantID, role: "assistant", content: ""))
+        messages.append(Message(id: assistantID, role: .assistant, content: ""))
         
         Task {
             for try await event in llmService.streamResponses(messages: requestMessages, model: selectedModel) {

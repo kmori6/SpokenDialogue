@@ -13,7 +13,7 @@ struct MessageView: View {
     
     var body: some View {
         HStack {
-            if message.role == "user" {
+            if message.role == .user {
                 Spacer(minLength: 40)
                                 
                 Text(message.content)

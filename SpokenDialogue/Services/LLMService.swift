@@ -57,7 +57,7 @@ final class LLMService {
     func responses(messages: [Message], model: LLM) async throws -> Message {
         
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") else {
-            return Message(role: "assistant", content: "API KEY load failed.")
+            return Message(role: .assistant, content: "API KEY load failed.")
         }
  
         let url = URL(string: "\(baseURL)/responses")
@@ -68,7 +68,7 @@ final class LLMService {
         
         var input: [MessageItem] = []
         for message in messages {
-            let item = MessageItem(role: message.role, content: message.content)
+            let item = MessageItem(role: message.role.rawValue, content: message.content)
             input.append(item)
         }
         let body = Request(model: model.rawValue, instructions: instructions, input: input)
@@ -78,7 +78,7 @@ final class LLMService {
         let decoder = JSONDecoder()
         let json = try decoder.decode(Responses.self, from: data)
         
-        let output = Message(role: json.output[0].role, content: json.output[0].content[0].text)
+        let output = Message(role: .assistant, content: json.output[0].content[0].text)
         return output
     }
 
@@ -98,7 +98,7 @@ final class LLMService {
                     model: model.rawValue,
                     instructions: instructions,
                     input: messages.map {
-                        MessageItem(role: $0.role, content: $0.content)
+                        MessageItem(role: $0.role.rawValue, content: $0.content)
                     }
                 )
                 
